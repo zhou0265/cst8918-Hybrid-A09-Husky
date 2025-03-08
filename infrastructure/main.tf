@@ -8,7 +8,7 @@ terraform {
     }
   }
 }
-provider    "azurerm" { # Extra spaces
+provider "azurerm" { # Extra spaces
   features {}
 }
 
