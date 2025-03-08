@@ -17,7 +17,7 @@ resource "azurerm_resource_group" "aks_rg" {
   location = "West US"
 }
 
-resource "azurerm_kubernetes_cluster" "aks_cluster" {# Missing closing brace
+resource "azurerm_kubernetes_cluster" "aks_cluster" { # Missing closing brace
   name                = "aks-cluster"
   location            = azurerm_resource_group.aks_rg.location
   resource_group_name = azurerm_resource_group.aks_rg.name
@@ -36,3 +36,4 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {# Missing closing brace
   tags = {
     Environment = "Dev"
   }
+}
