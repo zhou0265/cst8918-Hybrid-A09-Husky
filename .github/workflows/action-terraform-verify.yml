@@ -1,0 +1,66 @@
+name: Validate Terraform fmt
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  id-token: write   # Required for OIDC authentication with cloud providers (if needed)
+  contents: read    # Required to checkout code
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Terraform fmt check
+    outputs:
+      CHECK_STATUS: "${{ env.CHECK_STATUS }}"
+    steps:
+      # Checkout the repository code
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2    # Fetches enough history to detect changes
+
+      # Get list of changed files in the PR
+      - name: Fetch changed files
+        id: pr_files
+        uses: jitterbit/get-changed-files@v1
+        with:
+          format: "space-delimited"    # Outputs files as a space-separated list
+
+      # Set up Terraform
+      - name: Configure Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.4    # Matches your required_version in main.tf
+
+      # Check terraform fmt on added/modified .tf files
+      - name: Validate Terraform fmt (added_modified)
+        run: |
+          set +e    # Don't exit on error immediately, let us handle it
+
+          # Initialize CHECK_STATUS as success (0)
+          echo "CHECK_STATUS=0" >> $GITHUB_ENV
+
+          # Loop through added/modified files from the PR
+          for changed_file in ${{ steps.pr_files.outputs.added_modified }}; do
+            echo "Checking terraform fmt on ${changed_file}..."
+
+            # Only process .tf files
+            if [[ $changed_file == *.tf ]]; then
+              terraform fmt -check "$changed_file"
+              FMT_STATUS=$?
+
+              if [[ $FMT_STATUS -ne 0 ]]; then
+                echo "❌ Terraform fmt failed - ${changed_file}" >> $GITHUB_STEP_SUMMARY
+                echo "CHECK_STATUS=1" >> $GITHUB_ENV
+              fi
+            fi
+          done
+
+      # Exit with the final status to fail the job if CHECK_STATUS is 1
+      - name: Process check
+        if: always()    # Run even if previous steps fail
+        run: |
+          exit $CHECK_STATUS
