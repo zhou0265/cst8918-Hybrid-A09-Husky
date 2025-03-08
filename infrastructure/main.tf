@@ -8,13 +8,13 @@ terraform {
     }
   }
 }
-provider "azurerm" {
+provider   "azurerm" {    # Extra spaces
   features {}
 }
 
 resource "azurerm_resource_group" "aks_rg" {
   name     = "aks-resource-group"
-  location = "East US"
+  location = "West US"
 }
 
 resource "azurerm_kubernetes_cluster" "aks_cluster" {
